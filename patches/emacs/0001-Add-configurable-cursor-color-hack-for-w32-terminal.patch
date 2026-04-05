@@ -1,0 +1,105 @@
+From 47d92a9f9f0588a59c66022eeaed2736a92838e4 Mon Sep 17 00:00:00 2001
+From: Mihails M <mihailsm@nidac.com>
+Date: Sun, 5 Apr 2026 12:16:08 +0100
+Subject: [PATCH] Add configurable cursor color hack for w32 terminal
+
+---
+ src/w32term.c | 49 ++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 40 insertions(+), 9 deletions(-)
+
+diff --git a/src/w32term.c b/src/w32term.c
+index 75e116d205c..7cff5ec3a52 100644
+--- a/src/w32term.c
++++ b/src/w32term.c
+@@ -278,6 +278,9 @@ w32_get_pen (int style, int thickness, COLORREF color)
+ /* Keyboard code page - may be changed by language-change events.  */
+ int w32_keyboard_codepage;
+ 
++/* Mihails cursor hack: overrides cursor foreground color. */
++static COLORREF mihails_cursor_hack = RGB (255, 0, 0);
++
+ /* The number of screen lines to scroll for the default mouse-wheel
+    scroll amount, given by WHEEL_DELTA.  */
+ static UINT w32_wheel_scroll_lines;
+@@ -1138,6 +1141,7 @@ w32_draw_composite_glyph_string_foreground (struct glyph_string *);
+ static void w32_draw_glyph_string (struct glyph_string *);
+ static void w32_set_cursor_gc (struct glyph_string *);
+ static void w32_set_mode_line_face_gc (struct glyph_string *);
++static void update_mihails_cursor_color (void);
+ static void w32_set_mouse_face_gc (struct glyph_string *);
+ static int w32_alloc_lighter_color (struct frame *, COLORREF *,
+ 				    double, int);
+@@ -1163,15 +1167,7 @@ w32_draw_composite_glyph_string_foreground (struct glyph_string *);
+ static void
+ w32_set_cursor_gc (struct glyph_string *s)
+ {
+-  if (s->font == FRAME_FONT (s->f)
+-      && s->face->background == FRAME_BACKGROUND_PIXEL (s->f)
+-      && s->face->foreground == FRAME_FOREGROUND_PIXEL (s->f)
+-      /* Sometimes we are not called for each change in the default
+-	 face's background color (e.g., bug#26851), so the additional
+-	 test in the next line gives us a chance to resync.  */
+-      && s->f->output_data.w32->cursor_gc->foreground
+-	   == s->face->background
+-      && !s->cmp)
++  if (true)
+     s->gc = s->f->output_data.w32->cursor_gc;
+   else
+     {
+@@ -1200,6 +1196,8 @@ w32_set_cursor_gc (struct glyph_string *s)
+ 	  egc.foreground = s->face->background;
+ 	}
+ 
++    egc.foreground = mihails_cursor_hack;
++
+       IF_DEBUG (w32_check_font (s->f, s->font));
+       mask = GCForeground | GCBackground;
+ 
+@@ -1257,6 +1255,32 @@ w32_set_mode_line_face_gc (struct glyph_string *s)
+   s->gc = s->face->gc;
+ }
+ 
++static void
++update_mihails_cursor_color (void)
++{
++  if (STRINGP (Vmihails_cursor_hack))
++    {
++      Emacs_Color color;
++      if (w32_defined_color (NULL, SSDATA (Vmihails_cursor_hack),
++                             &color, false, false))
++        mihails_cursor_hack = RGB (color.red / 256,
++                                   color.green / 256,
++                                   color.blue / 256);
++    }
++  else if (FIXNUMP (Vmihails_cursor_hack))
++    mihails_cursor_hack = (COLORREF) XFIXNUM (Vmihails_cursor_hack);
++}
++
++DEFUN ("w32-update-mihails-cursor-color",
++       Fw32_update_mihails_cursor_color,
++       Sw32_update_mihails_cursor_color, 0, 0, 0,
++       doc: /* Re-read `w32-mihails-cursor-color' and apply it. */)
++  (void)
++{
++  update_mihails_cursor_color ();
++  return Qnil;
++}
++
+ /* Set S->gc of glyph string S for drawing that glyph string.  Set
+    S->stippled_p to a non-zero value if the face of S has a stipple
+    pattern.  */
+@@ -8707,4 +8731,11 @@ syms_of_w32term (void)
+ 
+   /* Tell Emacs about this window system.  */
+   Fprovide (Qw32, Qnil);
++
++  DEFVAR_LISP ("w32-mihails-cursor-color",
++                 Vmihails_cursor_hack,
++                 doc: /* Color name string for cursor foreground. */);
++    Vmihails_cursor_hack = build_string ("red");
++
++    defsubr (&Sw32_update_mihails_cursor_hack);
+ }
+-- 
+2.53.0.windows.2
+
