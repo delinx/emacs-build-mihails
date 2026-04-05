@@ -42,7 +42,7 @@ index 75e116d205c..7cff5ec3a52 100644
 -      && s->f->output_data.w32->cursor_gc->foreground
 -	   == s->face->background
 -      && !s->cmp)
-+  if (true)
++  if (false)
      s->gc = s->f->output_data.w32->cursor_gc;
    else
      {
@@ -98,7 +98,7 @@ index 75e116d205c..7cff5ec3a52 100644
 +                 doc: /* Color name string for cursor foreground. */);
 +    Vmihails_cursor_hack = build_string ("red");
 +
-+    defsubr (&Sw32_update_mihails_cursor_hack);
++    defsubr (&Sw32_update_mihails_cursor_color);
  }
 -- 
 2.53.0.windows.2
