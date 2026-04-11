@@ -56,12 +56,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Use a late-2024 MSYS2 snapshot which still ships GCC 14.
+      # GCC 15 introduced __imp_sys_strerror link failures with emacs-30.
       - name: Setup Msys2
         id: msys2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          release: false
+          release: true
+          date: 2024-12-01
 
       - name: Update MSYS2_DIR environment variable
         run: |
