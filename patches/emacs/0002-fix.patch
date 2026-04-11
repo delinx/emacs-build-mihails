@@ -1,0 +1,27 @@
+From 6e50d9681b1938748e8edcb2bd4c523b3ac84441 Mon Sep 17 00:00:00 2001
+From: Mihails M <mihailsm@nidac.com>
+Date: Sat, 11 Apr 2026 10:47:56 +0100
+Subject: [PATCH] fix
+
+---
+ nt/inc/ms-w32.h | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/nt/inc/ms-w32.h b/nt/inc/ms-w32.h
+index 7cd2c4c50f4..baebc067058 100644
+--- a/nt/inc/ms-w32.h
++++ b/nt/inc/ms-w32.h
+@@ -328,10 +328,6 @@ typedef int pid_t;
+ #endif
+ #define isatty    _isatty
+ #define _longjmp  longjmp
+-/* MinGW64 defines lseek to invoke lseek64.  */
+-#ifndef lseek
+-#define lseek     _lseek
+-#endif
+ #define popen     _popen
+ #define pclose    _pclose
+ #define strdup    _strdup
+-- 
+2.53.0.windows.2
+
