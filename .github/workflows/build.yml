@@ -72,11 +72,16 @@ jobs:
       - name: Pin GCC to 14.2.0
         shell: msys2 {0}
         run: |
+          # Try revision -2 first, fall back to -1
           pacman -U --noconfirm \
             "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-14.2.0-2-any.pkg.tar.zst" \
-            "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-14.2.0-2-any.pkg.tar.zst"
+            "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-14.2.0-2-any.pkg.tar.zst" \
+          || pacman -U --noconfirm \
+            "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-libs-14.2.0-1-any.pkg.tar.zst" \
+            "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-gcc-14.2.0-1-any.pkg.tar.zst"
           echo "[options]" >> /etc/pacman.conf
           echo "IgnorePkg = mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-libs" >> /etc/pacman.conf
+          gcc --version
 
       - name: Clone Emacs
         run: .\emacs-build.cmd --clone --repo $env:EMACS_REPO --branch $env:EMACS_BRANCH
