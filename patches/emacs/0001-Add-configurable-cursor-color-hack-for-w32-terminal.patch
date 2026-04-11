@@ -1,20 +1,20 @@
-From 2b35c09d21d84902e4148b36b5dbcaf10a4d7049 Mon Sep 17 00:00:00 2001
+From 0fcf5b24214fcd6225516e3a1e0ac1a4beabc8fe Mon Sep 17 00:00:00 2001
 From: Mihails M <mihailsm@nidac.com>
-Date: Sat, 11 Apr 2026 07:16:47 +0100
-Subject: [PATCH] Add configurable cursor color hack for w32 terminal
+Date: Sat, 11 Apr 2026 10:23:18 +0100
+Subject: [PATCH] patch
 
 ---
- src/w32term.c | 47 +++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 39 insertions(+), 8 deletions(-)
+ src/w32term.c | 47 +++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 37 insertions(+), 10 deletions(-)
 
 diff --git a/src/w32term.c b/src/w32term.c
-index add0791..e5d5ea5 100644
+index add0791..64e6c95 100644
 --- a/src/w32term.c
 +++ b/src/w32term.c
 @@ -202,6 +202,9 @@ int last_scroll_bar_drag_pos;
  /* Keyboard code page - may be changed by language-change events.  */
  int w32_keyboard_codepage;
-
+ 
 +/* Mihails cursor hack: overrides cursor foreground color. */
 +static COLORREF mihails_cursor_hack = RGB (255, 0, 0);
 +
@@ -45,19 +45,19 @@ index add0791..e5d5ea5 100644
      s->gc = s->f->output_data.w32->cursor_gc;
    else
      {
-@@ -1080,6 +1077,8 @@ w32_set_cursor_gc (struct glyph_string *s)
+@@ -1080,7 +1077,7 @@ w32_set_cursor_gc (struct glyph_string *s)
  	  egc.background = s->face->foreground;
  	  egc.foreground = s->face->background;
  	}
-+
+-
 +      egc.foreground = mihails_cursor_hack;
-
        IF_DEBUG (w32_check_font (s->f, s->font));
        mask = GCForeground | GCBackground;
-@@ -1140,6 +1139,31 @@ w32_set_mode_line_face_gc (struct glyph_string *s)
+ 
+@@ -1140,6 +1137,31 @@ w32_set_mode_line_face_gc (struct glyph_string *s)
    s->gc = s->face->gc;
  }
-
+ 
 +static void
 +update_mihails_cursor_color (void)
 +{
@@ -83,21 +83,28 @@ index add0791..e5d5ea5 100644
 +  update_mihails_cursor_color ();
 +  return Qnil;
 +}
-
+ 
  /* Set S->gc of glyph string S for drawing that glyph string.  Set
     S->stippled_p to a non-zero value if the face of S has a stipple
-@@ -8328,4 +8352,11 @@ API.  */);
-
+@@ -4179,7 +4201,7 @@ w32_set_horizontal_scroll_bar_thumb (struct scroll_bar *bar,
+   unblock_input ();
+ }
+ 
+-
++
+ /************************************************************************
+ 			 Scroll bars, general
+  ************************************************************************/
+@@ -8328,4 +8350,9 @@ API.  */);
+ 
    /* Tell Emacs about this window system.  */
    Fprovide (Qw32, Qnil);
-+
 +  DEFVAR_LISP ("w32-mihails-cursor-color",
 +                   Vmihails_cursor_hack,
 +                   doc: /* Color name string for cursor foreground. */);
 +      Vmihails_cursor_hack = build_string ("red");
-+
 +      defsubr (&Sw32_update_mihails_cursor_color);
  }
---
+-- 
 2.53.0.windows.2
 
