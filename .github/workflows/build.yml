@@ -1,21 +1,17 @@
-# This is a basic workflow to help you get started with Actions
-
 name: build
 
-# Controls when the action will run.
 on:
   schedule:
-    - cron: "0 0 1 * *" # monthly
-  # Allows you to run this workflow manually from the Actions tab
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   prepare_env:
     name: Prepare build version
     runs-on: ubuntu-latest
     env:
       EMACS_REPO: https://github.com/emacs-mirror/emacs.git
+      EMACS_BRANCH: emacs-30.2
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +27,7 @@ jobs:
           version=`echo ${major_ver}.${{ github.run_number }}.${ts}.${commit}`
 
           echo "commit=${commit}" >> $GITHUB_ENV
+          echo "branch=emacs-30.2" >> $GITHUB_ENV
           echo "version=${version}" >> $GITHUB_ENV
           echo "pkg_version=${major_ver}.${{ github.run_number }}.0.0" >> $GITHUB_ENV
     outputs:
@@ -38,6 +35,7 @@ jobs:
       version: ${{ env.version }}
       pkg_version: ${{ env.pkg_version }}
       commit: ${{ env.commit }}
+      branch: ${{ env.branch }}
 
   build_windows:
     needs: prepare_env
@@ -47,6 +45,7 @@ jobs:
     env:
       EMACS_REPO: ${{ needs.prepare_env.outputs.repo }}
       EMACS_COMMIT: ${{ needs.prepare_env.outputs.commit }}
+      EMACS_BRANCH: ${{ needs.prepare_env.outputs.branch }}
       EMACS_PKG_VERSION: ${{ needs.prepare_env.outputs.pkg_version }}
       EMACS_CERT_SECRET: ${{ secrets.EMACS_CERT_SECRET }}
       MSYSTEM: MINGW64
@@ -70,7 +69,7 @@ jobs:
           echo "MSYS2_DIR=${{ steps.msys2.outputs.msys2-location }}" >> $env:GITHUB_ENV
 
       - name: Clone Emacs
-        run: .\emacs-build.cmd --clone --repo $env:EMACS_REPO --branch $env:EMACS_COMMIT
+        run: .\emacs-build.cmd --clone --repo $env:EMACS_REPO --branch $env:EMACS_BRANCH
 
       - name: Install deps
         run: |
@@ -78,15 +77,15 @@ jobs:
 
       - name: Build Emacs
         run: |
-          .\emacs-build.cmd --slim --branch $env:EMACS_COMMIT --configure --build-dev --without-mps
+          .\emacs-build.cmd --slim --branch $env:EMACS_BRANCH --configure --build-dev --without-mps
 
       - name: Package Emacs
         run: |
           $env:MSIXHeroCLI = &where.exe MSIXHeroCLI
           if ($env:MSIXHeroCLI) {
-            .\emacs-build.cmd --slim --branch $env:EMACS_COMMIT --msix --pack-all --without-mps
+            .\emacs-build.cmd --slim --branch $env:EMACS_BRANCH --msix --pack-all --without-mps
           } else {
-            .\emacs-build.cmd --slim --branch $env:EMACS_COMMIT --pack-all --without-mps
+            .\emacs-build.cmd --slim --branch $env:EMACS_BRANCH --pack-all --without-mps
           }
 
       - name: Upload binaries to release
